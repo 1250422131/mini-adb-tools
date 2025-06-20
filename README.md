@@ -1,10 +1,11 @@
 # mini-adb-tools
 
-An Electron application with React and TypeScript
+一个简单的批量adb操作工具，学习项目，由Electron构建。
 
-## Recommended IDE Setup
+## 支持功能
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+- 批量连接
+- 批量安装文件
 
 ## Project Setup
 

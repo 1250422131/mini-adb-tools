@@ -1,8 +1,6 @@
 name: Build Pack
 on:
-  push:
-    branches:
-      - main # master 分支 push 时触发工作流
+    workflow_dispatch: # 改手动触发
 jobs:
   pack: # 打包任务
     runs-on: windows-latest
