@@ -1,0 +1,31 @@
+name: Build Pack
+on:
+  push:
+    branches:
+      - main # master 分支 push 时触发工作流
+jobs:
+  pack: # 打包任务
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4 # 下载仓库代码到工作流机器中
+      - name: Setup Node.js # 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # 设置 Node.js 版本为 20
+      - name: Install pnpm # 安装 pnpm
+        run: |
+          npm install -g pnpm
+      - name: Install and Pack # 安装依赖并且进行构建
+        run: |
+          pnpm install
+          pnpm build:win
+      - name: Upload win-unpacked folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-unpacked
+          path: dist/win-unpacked
+      - name: Upload setup exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: setup-exe
+          path: dist/mini-adb-tools-*-setup.exe
