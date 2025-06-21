@@ -1,9 +1,8 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { createClient } from '@u4/adbkit'
-import MiniDevice from '../shared/model/MiniDevice'
+import { registerAllHandlers } from './handlers'
 
 function createWindow(): void {
   // Create the browser window.
@@ -53,74 +52,8 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
-  // IPC handler for getting device count
-  ipcMain.handle('adb-get-device-count', async () => {
-    const adbClient = createClient()
-    try {
-      const devices = await adbClient.listDevices()
-      const newDevices = devices.map(async (device) => {
-        const serialNo = await device.getClient().getSerialNo()
-        return <MiniDevice>{
-          id: device.id,
-          type: device.type,
-          serialNo: serialNo
-        }
-      })
-      const finishDevices = await Promise.all(newDevices)
-      return { success: true, count: devices.length, error: null, devices: finishDevices }
-    } catch (error: any) {
-      console.error('ADB检测失败:', error)
-      return { success: false, error: error.message, count: 0 }
-    }
-  })
-
-  ipcMain.on('open-apk-file-dialog', async (event) => {
-    const { canceled, filePaths } = await dialog.showOpenDialog({
-      properties: ['openFile'] // 只允许选择文件
-    })
-    if (!canceled && filePaths.length > 0) {
-      // 将选中的文件路径发送回渲染进程
-      event.reply('selected-apk-file', filePaths[0])
-    }
-  })
-
-  ipcMain.handle('adb-log-connect', async (_, host: string, port: number) => {
-    const adbClient = createClient()
-    try {
-      const result = await adbClient.connect(host, port)
-      if (result) {
-        return { msg: `设备：${host}:${port}-连接成功`, type: 'success' }
-      } else {
-        return { msg: `设备：${host}:${port}-已经在连接列表了`, type: 'warning' }
-      }
-    } catch (error: any) {
-      return { msg: `设备：${host}:${port}-连接失败`, type: 'error' }
-    }
-  })
-
-  ipcMain.handle('adb-install-apk', async (_, id: string, apkPath: string) => {
-    const adbClient = createClient()
-    try {
-
-      let devices = await adbClient.listDevices()
-      devices = devices.filter((device) => device.id === id)
-      if (devices.length === 0) {
-        return { msg: `设备：${id}-未找到`, type: 'error' }
-      }
-      const device = devices[0]
-      const installResult = await device.getClient().install(apkPath)
-      if (installResult) {
-        return { msg: `设备：${id}-安装成功`, type: 'success' }
-      } else {
-        return { msg: `设备：${id}-安装失败`, type: 'error' }
-      }
-    } catch (error: any) {
-      return { msg: `设备：${id}-安装失败,${error}`, type: 'error' }
-    }
-  })
+  // 注册所有 IPC handlers
+  registerAllHandlers()
 
   createWindow()
 
