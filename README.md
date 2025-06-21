@@ -6,6 +6,12 @@
 
 - 批量连接
 - 批量安装文件
+- 批量启动远程控制
+
+# 演示截图
+![](/resources/introduce/1.png)
+![](/resources/introduce/2.png)
+![](/resources/introduce/3.png)
 
 ## Project Setup
 

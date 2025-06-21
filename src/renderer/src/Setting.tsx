@@ -85,16 +85,24 @@ export default function Settings(): React.JSX.Element {
                         loadingPosition="start" >检测ADB</Button>
                 </div>
                 <h1 className="text-2xl font-bold">Scrcpy</h1>
-                <Alert severity="info" >
-                    <AlertTitle>Scrcpy - {scrcpVersion}</AlertTitle>
-                    <div>
-                        本项目采用 Scrcpy 作为屏幕投射工具，当前版本为 {scrcpVersion}。
-                    </div>
-                </Alert>
-                <h2 className="text-2xl font-bold">项目相关</h2>
+                <CardActionArea onClick={() => {
+                    window.electron.ipcRenderer.send('open-url', 'https://github.com/Genymobile/scrcpy');
+                }}>
+                    <Alert severity="info" >
+
+                        <AlertTitle>Scrcpy - {scrcpVersion}</AlertTitle>
+                        <div>
+                            本项目采用 Scrcpy 作为屏幕投射工具，当前版本为 {scrcpVersion}。
+                        </div>
+                    </Alert>
+                </CardActionArea>
+
+                <h2 className="text-2xl font-bold mt-4">项目相关</h2>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                     <Card variant="outlined" >
-                        <CardActionArea >
+                        <CardActionArea onClick={() => {
+                            window.electron.ipcRenderer.send('open-url', 'https://github.com/1250422131/mini-adb-tools');
+                        }}>
                             <div className='flex p-4 items-center'>
                                 <GitHubIcon fontSize="large" />
                                 <div className='ml-5 '>
@@ -109,6 +117,9 @@ export default function Settings(): React.JSX.Element {
                         </CardActionArea>
                     </Card>
 
+                </div>
+                <div>
+                    测试版本阶段，没有接入远程更新，因此请点击开源协议，进入 GitHub 仓库获取最新版本。
                 </div>
 
             </div>

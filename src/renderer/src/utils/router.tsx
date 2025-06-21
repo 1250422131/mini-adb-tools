@@ -11,16 +11,16 @@ import AllConnect from "@renderer/tools/AllConnect";
 
 
 const checkAdbLoader = async () => {
-  try {
-    const result = await useAdbStore.getState().updateCheckAdbState();
-    if (result.success && result.count > 0) {
-      return null;
-    } else {
-      throw redirect('/');
-    }
-  } catch (error) {
-    throw redirect('/');
-  }
+  // try {
+  //   const result = await useAdbStore.getState().updateCheckAdbState();
+  //   if (result.success && result.count > 0) {
+  //     return null;
+  //   } else {
+  //     throw redirect('/');
+  //   }
+  // } catch (error) {
+  //   throw redirect('/');
+  // }
 }
 
 const router = createHashRouter([
@@ -31,7 +31,6 @@ const router = createHashRouter([
       {
         path: "tools/all-connect",
         Component: AllConnect,
-        loader: checkAdbLoader,
       },
       {
         index: true,
@@ -40,8 +39,6 @@ const router = createHashRouter([
       {
         path: "tools/devices",
         Component: Devices,
-        loader: checkAdbLoader,
-
       },
     ]
   }

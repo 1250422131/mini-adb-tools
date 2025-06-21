@@ -2,6 +2,7 @@ import { ipcMain } from 'electron'
 import { registerAdbHandlers } from './adbHandlers'
 import { registerScrcpyHandlers } from './scrcpyHandlers'
 import { registerFileHandlers } from './fileHandlers'
+import { registerCommonHandlers } from './commonHandlers'
 
 export function registerAllHandlers(): void {
   // 注册基础 IPC
@@ -11,4 +12,5 @@ export function registerAllHandlers(): void {
   registerAdbHandlers()
   registerScrcpyHandlers()
   registerFileHandlers()
+  registerCommonHandlers()
 }
