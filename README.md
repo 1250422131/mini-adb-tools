@@ -8,10 +8,18 @@
 - 批量安装文件
 - 批量启动远程控制
 
-# 演示截图
+## 演示截图
 ![](/resources/introduce/1.png)
 ![](/resources/introduce/2.png)
 ![](/resources/introduce/3.png)
+
+
+## 开源支持
+
+[AdbKit - 设备控制](https://github.com/UrielCh/adbkit)
+
+[Scrcpy - 远程控制](https://github.com/Genymobile/scrcpy)
+
 
 ## Project Setup
 
