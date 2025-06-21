@@ -1,6 +1,5 @@
 import { ipcMain } from 'electron'
 import { spawn } from 'child_process'
-import { join } from 'path'
 import { getScrpyPath } from '../utils/scrcpy'
 
 export function registerScrcpyHandlers(): void {
@@ -37,8 +36,8 @@ export function registerScrcpyHandlers(): void {
 
     // 获取 scrcpy 版本信息
     ipcMain.handle('scrcpy-version', async () => {
+        const scrcpyPath = getScrpyPath()
         try {
-            const scrcpyPath = join(__dirname, '../../resources/scrcpy/scrcpy-win64-v3.3.1/scrcpy.exe')
 
             return new Promise((resolve) => {
                 const process = spawn(scrcpyPath, ['--version'], { shell: true, })
