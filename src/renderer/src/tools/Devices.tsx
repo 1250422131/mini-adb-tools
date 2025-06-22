@@ -46,6 +46,35 @@ export default function Devices(): React.JSX.Element {
     const [filePath, setFilePath] = useState<string>('');
 
     const [showFileDialog, setShowFileDialog] = useState<boolean>(false);
+    const dropAreaRef = useRef<HTMLDivElement>(null);
+    const [isDragOver, setIsDragOver] = useState<boolean>(false);
+
+
+    // 处理拖拽，目前只有安装包这块需要拖拽。
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        if (showFileDialog) {
+            setIsDragOver(true);
+        }
+    };
+    const handleDrop = async (e) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        if (!showFileDialog) return;
+        const files = e.dataTransfer?.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            if (file.name.toLowerCase().endsWith('.apk')) {
+                const filePath = window.electron.webUtils.getPathForFile(file);
+                setFilePath(filePath);
+            }
+        }
+    };
+    const handleDragLeave = () => {
+        if (showFileDialog) {
+            setIsDragOver(false);
+        }
+    }
 
 
     useEffect(() => {
@@ -158,14 +187,17 @@ export default function Devices(): React.JSX.Element {
     };
 
 
+    // 回退操作
     const handleDeviesBack = (device: MiniDevice) => {
         window.electron.ipcRenderer.invoke('adb-devices-shell', device.id, "input keyevent 4")
     }
 
+    // 回到首页操作
     const handleDevicesBackAll = (device: MiniDevice) => {
         window.electron.ipcRenderer.invoke('adb-devices-shell', device.id, "input keyevent 3")
     }
 
+    // 打开后台
     const handleDevicesTask = (device: MiniDevice) => {
         window.electron.ipcRenderer.invoke('adb-devices-shell', device.id, "input keyevent 187")
     }
@@ -301,33 +333,67 @@ export default function Devices(): React.JSX.Element {
             </Card>
 
 
-            <Dialog onClose={() => { setShowFileDialog(false) }} open={showFileDialog}>
+            <Dialog
+                onClose={() => {
+                    setShowFileDialog(false);
+                    setFilePath('');
+                    setIsDragOver(false);
+                }}
+                open={showFileDialog}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>选择安装包</DialogTitle>
-                <Card variant="outlined" onClick={() => {
-                    if (filePath === '') {
-                        handleOpenFileDialog();
-                    }
-                }} className='w-100 mx-5 '>
+                <div
+                    ref={dropAreaRef}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onClick={() => {
+                        if (filePath === '') {
+                            handleOpenFileDialog();
+                        }
+                    }}
+                    className={`mx-5 transition-all duration-200 ${isDragOver ? 'bg-blue-50 border-blue-300 shadow-lg' : 'hover:bg-gray-50'}`}
+                >
                     <CardActionArea>
-                        <Box className='p-2'>
+                        <Box
+                            className={`p-8 text-center min-h-32 ${isDragOver ? 'border-2 border-dashed border-blue-400' : 'border border-dashed border-gray-300'}`}
+                        >
                             {
                                 filePath === '' ? (
                                     <>
-                                        <FileUploadIcon className='text-gray-400 ' />
-                                        <h2 className='text-lg font-semibold'>请选择安装包</h2>
-                                        <p className='text-sm text-gray-600'>点击此处选择 APK 文件</p>
+                                        <FileUploadIcon
+                                            className={`text-6xl mb-2 ${isDragOver ? 'text-blue-500' : 'text-gray-400'}`}
+                                        />
+                                        <h2 className={`text-lg font-semibold mb-2 ${isDragOver ? 'text-blue-600' : ''}`}>
+                                            {isDragOver ? '释放文件到此处' : '请选择安装包/释放文件到此处'}
+                                        </h2>
+                                        <p className='text-sm text-gray-600'>
+                                            {isDragOver ? '松开鼠标即可添加文件' : '点击此处选择 APK 文件或拖拽文件到此处'}
+                                        </p>
                                     </>
                                 ) : (
                                     <>
-                                        <h2 className='text-lg font-semibold'>已选择安装包</h2>
-                                        <p className='text-sm text-gray-600'>{filePath}</p>
+                                        <FileUploadIcon className="text-green-500 text-4xl mb-2" />
+                                        <h2 className='text-lg font-semibold mb-2 text-green-600'>已选择安装包</h2>
+                                        <p className='text-sm text-gray-600 break-all mb-3'>{filePath}</p>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFilePath('');
+                                            }}
+                                        >
+                                            重新选择
+                                        </Button>
                                     </>
                                 )
-
                             }
                         </Box>
                     </CardActionArea>
-                </Card>
+                </div>
                 <div className='m-5 flex'>
                     <Button variant="contained" disabled={selectedDevices.length === 0 || isLoading || filePath === ''}
                         loading={isLoading}

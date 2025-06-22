@@ -1,4 +1,5 @@
 import { ipcMain, dialog } from 'electron'
+import { webUtils } from 'electron/renderer'
 
 export function registerFileHandlers(): void {
   // 打开 APK 文件选择对话框
@@ -16,6 +17,4 @@ export function registerFileHandlers(): void {
     }
   })
 
-  // 可以添加其他文件相关的处理器
-  // 比如：保存文件、读取文件等
 }
