@@ -1,5 +1,4 @@
 import { ipcMain, dialog } from 'electron'
-import { webUtils } from 'electron/renderer'
 
 export function registerFileHandlers(): void {
   // 打开 APK 文件选择对话框

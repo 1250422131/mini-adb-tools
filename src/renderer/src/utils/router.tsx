@@ -6,6 +6,7 @@ import HomePage from "@renderer/components/home/HomePage";
 import Settings from "@renderer/Setting";
 import Devices from "@renderer/tools/Devices";
 import AllConnect from "@renderer/tools/AllConnect";
+import DeviceInfo from "@renderer/device/Info";
 
 
 
@@ -27,6 +28,9 @@ const router = createHashRouter([
         Component: Devices,
       },
     ]
+  }, {
+    path: "/device/:id",
+    Component: DeviceInfo,
   }
 ]);
 

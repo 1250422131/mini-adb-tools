@@ -23,7 +23,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Dialog from '@mui/material/Dialog';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CardActionArea from '@mui/material/CardActionArea';
-
+import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
 export default function Devices(): React.JSX.Element {
     const adbStore = useAdbStore.getState();
     const [selectedDevices, setSelectedDevices] = useState<MiniDevice[]>([]);
@@ -31,7 +31,7 @@ export default function Devices(): React.JSX.Element {
     const devices = adbStore.adbDevices?.devices || [];
     const isAllSelected = devices.length > 0 && selectedDevices.length === devices.length;
     const isIndeterminate = selectedDevices.length > 0 && selectedDevices.length < devices.length;
-
+    
     const [log, setLog] = useState<{
         type: 'info' | 'error' | 'success' | 'warning';
         message: string;
@@ -290,6 +290,16 @@ export default function Devices(): React.JSX.Element {
                                                 size="small"
                                             >
                                                 <ListIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title="详情信息">
+                                            <IconButton
+                                                onClick={() => {
+                                                    window.electron.ipcRenderer.send('open-window-by-router', "device/" + row.id, row.properties['ro.product.name']);
+                                                }}
+                                                size="small"
+                                            >
+                                                <DashboardCustomizeIcon />
                                             </IconButton>
                                         </Tooltip>
                                     </TableCell>

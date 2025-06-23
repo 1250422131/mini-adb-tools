@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import MiniDevice from '../../shared/model/MiniDevice'
 import adbClient from '../utils/adbClient'
+import { PackageInfo } from '@u4/adbkit'
 
 export function registerAdbHandlers(): void {
     // 获取设备列表
@@ -78,4 +79,54 @@ export function registerAdbHandlers(): void {
             return { success: false, message: `执行命令失败: ${error.message}` }
         }
     })
+
+    // 获取设备信息
+    ipcMain.handle('adb-get-device-info', async (_, id: string) => {
+        try {
+            const client = adbClient.getDevice(id)
+            if (!client) {
+                return { success: false, message: `设备：${id}-未找到` }
+            }
+            const serialNo = await client.getSerialNo()
+            const props = await client.getProperties()
+            const state = await client.getState()
+            const devicePath = await client.getDevicePath()
+            return {
+                success: true,
+                deviceInfo: {
+                    state: state,
+                    serialNo: serialNo,
+                    properties: props,
+                    devicePath: devicePath,
+                    name: props['ro.product.name'] || '未知设备',
+                    manufacturer: props['ro.product.manufacturer'] || '未知型号',
+                },
+                message: `设备信息获取成功`
+            }
+        } catch (error: any) {
+            console.error(`获取设备信息失败:`, error)
+            return { success: false, message: `获取设备信息失败: ${error.message}` }
+        }
+    })
+
+    // 获取设备程序
+    ipcMain.handle('adb-get-device-apps', async (_, id: string) => {
+        try {
+            const client = adbClient.getDevice(id)
+            if (!client) {
+                return { success: false, message: `设备：${id}-未找到` }
+            }
+            const packages = await client.listPackages()
+            const appInfos: PackageInfo[] = []
+            for (const pkg of packages) {
+                const dump = await pkg.getInfo()
+                appInfos.push(dump)
+            }
+            return { success: true, appInfos: appInfos, message: `设备应用列表获取成功` }
+        } catch (error: any) {
+            console.error(`获取设备应用列表失败:`, error)
+            return { success: false, message: `获取设备应用列表失败: ${error.message}` }
+        }
+    })
+
 }
