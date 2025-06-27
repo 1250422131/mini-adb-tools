@@ -42,6 +42,22 @@ export function registerAdbHandlers(): void {
         }
     })
 
+    // 断开设备
+    ipcMain.handle('adb-log-disconnect', async (_, id: string) => {
+        try {
+            const host = id.split(':')[0]
+            const port = parseInt(id.split(':')[1]) || 5555 // 默认端
+            const result = await adbClient.disconnect(host, port)
+            if (result) {
+                return { msg: `设备：${id}-断开连接成功`, type: 'success' }
+            } else {
+                return { msg: `设备：${id}-未找到连接`, type: 'warning' }
+            }
+        } catch (error: any) {
+            return { msg: `设备：${id}-断开连接失败`, type: 'error' }
+        }
+    })
+
     // 安装APK
     ipcMain.handle('adb-install-apk', async (_, id: string, apkPath: string) => {
         try {

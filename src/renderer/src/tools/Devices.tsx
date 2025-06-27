@@ -24,6 +24,8 @@ import Dialog from '@mui/material/Dialog';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CardActionArea from '@mui/material/CardActionArea';
 import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
+import TextField from '@mui/material/TextField';
+
 export default function Devices(): React.JSX.Element {
     const adbStore = useAdbStore.getState();
     const [selectedDevices, setSelectedDevices] = useState<MiniDevice[]>([]);
@@ -31,7 +33,7 @@ export default function Devices(): React.JSX.Element {
     const devices = adbStore.adbDevices?.devices || [];
     const isAllSelected = devices.length > 0 && selectedDevices.length === devices.length;
     const isIndeterminate = selectedDevices.length > 0 && selectedDevices.length < devices.length;
-    
+
     const [log, setLog] = useState<{
         type: 'info' | 'error' | 'success' | 'warning';
         message: string;
@@ -40,6 +42,7 @@ export default function Devices(): React.JSX.Element {
     const [isAutoScroll, setIsAutoScroll] = useState<boolean>(true);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [installIsLoading, setInstallIsLoading] = useState<boolean>(false);
 
     const scrollRef = useRef<HTMLUListElement>(null);
 
@@ -48,6 +51,19 @@ export default function Devices(): React.JSX.Element {
     const [showFileDialog, setShowFileDialog] = useState<boolean>(false);
     const dropAreaRef = useRef<HTMLDivElement>(null);
     const [isDragOver, setIsDragOver] = useState<boolean>(false);
+
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [filteredLog, setFilteredLog] = useState(log);
+
+    const [installFinish, setInstallFinish] = useState<boolean>(false);
+    // 安装成功数量
+    const [installSuccessCount, setInstallSuccessCount] = useState<number>(0);
+    // 安装失败数量
+    const [installFailCount, setInstallFailCount] = useState<number>(0);
+
+    useEffect(() => {
+        setFilteredLog(log.filter(item => item.message.includes(searchQuery) || searchQuery === ''));
+    }, [log, searchQuery]);
 
 
     // 处理拖拽，目前只有安装包这块需要拖拽。
@@ -139,18 +155,40 @@ export default function Devices(): React.JSX.Element {
 
 
     const handleApkInstall = async () => {
-        setIsLoading(true);
+        setInstallFailCount(0);
+        setInstallSuccessCount(0);
+        setInstallFinish(false);
+        setInstallIsLoading(true);
         // 切割端口和host
         await (async () => {
             for (const device of selectedDevices) {
                 setLog((prevLogs) => [...prevLogs, { type: "info", message: `设备：${device.id}-开始安装...` }]);
                 const result = await window.electron.ipcRenderer.invoke('adb-install-apk', device.id, filePath);
+                if (result.type === 'success') {
+                    setInstallSuccessCount(prev => prev + 1);
+                } else {
+                    setInstallFailCount(prev => prev + 1);
+                }
                 setLog((prevLogs) => [...prevLogs, { type: result.type, message: result.msg }]);
             }
         })();
-
+        setInstallIsLoading(false);
+        setInstallFinish(true);
+    }
+    // 批量断开连接 
+    const handleBatchDisconnect = async () => {
+        setIsLoading(true);
+        await (async () => {
+            for (const device of selectedDevices) {
+                setLog((prevLogs) => [...prevLogs, { type: "info", message: `设备：${device.id}-开始断开` }]);
+                const result = await window.electron.ipcRenderer.invoke('adb-log-disconnect', device.id);
+                setLog((prevLogs) => [...prevLogs, { type: result.type, message: result.msg }]);
+                await adbStore.updateCheckAdbState();
+            }
+        })();
         setIsLoading(false);
     }
+
 
     // 启动单个设备投屏
     const handleStartScrcpy = async (device: MiniDevice) => {
@@ -310,14 +348,19 @@ export default function Devices(): React.JSX.Element {
                 </TableContainer>
             </div>
 
-            <Card variant="outlined" className='mt-4' >
+            <div className='mt-4'>
+                <TextField className="w-full" label="查找日志" variant="outlined" onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                }} />
+            </div>
+            <Card variant="outlined" className='mt-2' >
                 <Box className='p-4'>
                     <h2 className='text-lg font-semibold'>操作日志</h2>
                     <ul className='max-h-80 overflow-y-auto overscroll-contain'
                         ref={scrollRef}
                         onScroll={handleLogScroll}
                     >
-                        {log.map((item, index) => (
+                        {filteredLog.map((item, index) => (
                             <li
                                 key={index}
                                 className={`
@@ -405,7 +448,7 @@ export default function Devices(): React.JSX.Element {
                     </CardActionArea>
                 </div>
                 <div className='m-5 flex'>
-                    <Button variant="contained" disabled={selectedDevices.length === 0 || isLoading || filePath === ''}
+                    <Button variant="contained" disabled={selectedDevices.length === 0 || installIsLoading || filePath === ''}
                         loading={isLoading}
                         loadingPosition='start'
                         color="primary" onClick={() => {
@@ -416,13 +459,19 @@ export default function Devices(): React.JSX.Element {
             </Dialog>
 
 
-            <Box className='mt-4 flex '>
+            <Box className='mt-4 flex gap-4'>
                 <Button variant="contained" disabled={selectedDevices.length === 0 || isLoading}
                     loadingPosition='start'
+                    loading={installIsLoading}
                     color="primary" onClick={() => { setShowFileDialog(true) }}>批量安装</Button>
 
-                <div className='w-4'></div>
-
+                <Button variant="contained" disabled={selectedDevices.length === 0 || isLoading}
+                    color="primary" onClick={() => { handleBatchDisconnect() }}
+                    loading={isLoading}
+                    loadingPosition='start'
+                >
+                    批量断开
+                </Button>
                 <Button variant="contained" disabled={selectedDevices.length === 0 || isLoading}
                     color="secondary" onClick={handleBatchStartScrcpy}
                     loading={isLoading}
@@ -430,6 +479,7 @@ export default function Devices(): React.JSX.Element {
                 >
                     批量投屏
                 </Button>
+                {installFinish ? <div>全部安装完成，成功数量：{installSuccessCount},失败数量：{installFailCount}</div> : <></>}
             </Box>
         </div>
     )

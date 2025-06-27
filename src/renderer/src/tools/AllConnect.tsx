@@ -6,6 +6,7 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import { useEffect, useRef, useState } from 'react';
+import { useAdbStore } from '@renderer/store/adbStore';
 
 export default function AllConnect() {
 
@@ -24,7 +25,16 @@ export default function AllConnect() {
 
   const scrollRef = useRef<HTMLUListElement>(null);
 
+  const adbStore = useAdbStore.getState()
 
+  // 连接成功个数
+  const [successCount, setSuccessCount] = useState<number>(0);
+  // 连接失败个数
+  const [failCount, setFailCount] = useState<number>(0);
+
+  useEffect(() => {
+    adbStore.updateCheckAdbState()
+  }, [])
 
 
   useEffect(() => {
@@ -54,6 +64,8 @@ export default function AllConnect() {
     setIsLoading(true);
     const ips = ipList.split('\n').map(ip => ip.trim()).filter(ip => ip);
     // 切割端口和host
+    setFailCount(0);
+    setSuccessCount(0);
     await (async () => {
       for (const ip of ips) {
         let [host, port] = ip.split(':');
@@ -62,7 +74,13 @@ export default function AllConnect() {
         }
         setLog((prevLogs) => [...prevLogs, { type: "info", message: `设备：${host}:${port}-开始连接...` }]);
         const result = await window.electron.ipcRenderer.invoke('adb-log-connect', host, parseInt(port));
+        if (result.type === 'success' || result.type === 'warning') {
+          setSuccessCount(prev => prev + 1);
+        } else {
+          setFailCount(prev => prev + 1);
+        }
         setLog((prevLogs) => [...prevLogs, { type: result.type, message: result.msg }]);
+        await adbStore.updateCheckAdbState();
       }
     })();
 
@@ -86,6 +104,7 @@ export default function AllConnect() {
     <div className="w-full h-full">
       <h1 className="text-2xl font-bold">批量连接（一行一个）</h1>
       <div className="mt-4 flex flex-col space-y-4">
+        <div>当前设备个数：{adbStore.adbDevices?.count}</div>
         <TextField
           label="IP列表"
           multiline
@@ -94,11 +113,17 @@ export default function AllConnect() {
           defaultValue=""
           onChange={(e) => setIpList(e.target.value)}
         />
-        <Box className='mt-3'>
+        <Box className='mt-3 flex gap-4 items-center'>
           <Button variant="contained"
             loading={isLoading}
             loadingPosition="start"
             color="primary" onClick={handleConnect}>连接</Button>
+          <div>
+            连接成功（含重复连接）：{successCount}个
+          </div>
+          <div>
+            连接失败：{failCount}个
+          </div>
         </Box>
 
         <Card variant="outlined" >

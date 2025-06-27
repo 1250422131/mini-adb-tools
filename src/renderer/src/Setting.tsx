@@ -97,31 +97,6 @@ export default function Settings(): React.JSX.Element {
                     </Alert>
                 </CardActionArea>
 
-                <h2 className="text-2xl font-bold mt-4">项目相关</h2>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    <Card variant="outlined" >
-                        <CardActionArea onClick={() => {
-                            window.electron.ipcRenderer.send('open-url', 'https://github.com/1250422131/mini-adb-tools');
-                        }}>
-                            <div className='flex p-4 items-center'>
-                                <GitHubIcon fontSize="large" />
-                                <div className='ml-5 '>
-                                    <div className='text-1xl font-bold'>开源协议</div>
-                                    <div>
-                                        本项目采用 Apache-2.0 license 协议开源
-                                    </div>
-                                </div>
-                            </div>
-
-
-                        </CardActionArea>
-                    </Card>
-
-                </div>
-                <div>
-                    测试版本阶段，没有接入远程更新，因此请点击开源协议，进入 GitHub 仓库获取最新版本。
-                </div>
-
             </div>
         </div>
     );
