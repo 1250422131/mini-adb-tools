@@ -3,9 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAdbStore, AdbState } from "./store/adbStore";
 import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
-import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
-import GitHubIcon from '@mui/icons-material/GitHub';
 
 
 
